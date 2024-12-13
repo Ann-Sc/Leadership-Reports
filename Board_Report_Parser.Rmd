@@ -1,0 +1,394 @@
+---
+title: "Board Report Parser"
+author: "Ann Scruggs"
+date: "2024-12-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Transforming the Dataset
+
+The code chunk below loads the appropriate data downloaded from PowerBI and does some initial setup
+
+```{r part_1}
+
+######################################################################
+#Loading in Data and initial setup
+######################################################################
+
+#install.packages("readxl") 
+library(readxl)
+#install.packages("dplyr")
+library(dplyr)
+
+#setting directory and loading data
+setwd("~/Documents/Serge/Metrics/Dec_BR/")
+data <- read_excel("data.xlsx")
+
+#Cleaning data
+field_data <- data %>%
+  filter(Name...1 != "Renewal") %>% #filtering out Renewal Team
+  mutate(Category = ifelse(Category == "Renewal", "Renew", Category)) %>% #Modifying "Renewal" category name
+  filter(Name...1 != "Total") %>% #removing total row
+  filter(Category != "Team Life") #filtering out TeamLife rows 
+```
+
+The code chunk below creates a new column that assigns a sub - category to each activity. New and unassigned activities can be added to this chunk.
+
+```{r part_2}
+
+######################################################################
+#Adding "sub_category" column and assigning each activity
+######################################################################
+
+categorized_data <- field_data %>%
+  mutate(sub_category = case_when(
+    
+    #REACH SUB-CATEGORIES
+    Name...2 %in% c("Intentional relational encounter with unbeliever", 
+                    "People participating in outreach events", 
+                    "Pre-E Encounters", 
+                    "Number of hours engaged in relationship-building ministry", 
+                    "Intentional relational encounter with unbeliever from ministry focus group",
+                    "Intentional relational encounter with unbeliever not from ministry focus group",
+                    "Number of those who received practical assistance") ~ "Pre E Encounter",
+    
+    Name...2 %in% c("Number of patient CDs as reported by hospital chaplains",
+                    "G-spl conversations",
+                    "Spiritual Conversations with Non-Believers",
+                    "Special Outreach Events (EV emphasis)",
+                    "Number of significant new EV encounters with NBs",
+                    "Conversations that led to speaking about the gspl",
+                    "E Encounters",
+                    "Number of EV encounters",
+                    "Number of ABs",
+                    "Number of pre-CD conversations by team with non believers",
+                    "Number of times a team member talked about God with non-believer(s)",
+                    "Verbal gospel encounter with unbeliever from ministry focus group",
+                    "Verbal gospel encounter with unbeliever not from ministry focus group") ~ "Gospel Conversation",
+    
+    Name...2 %in% c("Number of times a team member preached or taught",
+                    "Event attendance where team member taught of preached",
+                    "Number of times a team member preached or provided spiritual teaching",
+                    "Students taught in English & storytelling classes",
+                    "Worship",
+                    "Special Outreach Events (EV emphasis)",
+                    "Number of events at which team members taught or preached",                     
+                    "Number of times team member preached/taught in small group",
+                    "Number of people attending HC, C or BS - NB or B",
+                    "Number of other classes taught",
+                    "Sunday church attendances: total unbelievers") ~ "Formal Gospel Encounter",
+    
+    #RENEW SUB-CATEGORIES
+    Name...2 %in% c("People receiving mentoring/discipling",
+                    "Number of people our team is discipling",
+                    "Number of people engaged in small group Book studies by team members",
+                    "People receiving spiritual/marriage coaching",
+                    "Discipleship encounter",
+                    "Meaningful encounters with women involved in bakery",
+                    "Number of People Team is discipling",
+                    "Number people engaged in mentoring and discipling relationships",   
+                    "Number of discipleship encounters per month",
+                    "One to one (inward)",                                                             
+                    "One to one (outward)",
+                    "Relational prayer times",                                                         
+                    "Small group teaching",
+                    "D encounters",                                                                    
+                    "Number of people team members discipled or mentored",
+                    "Number of times a team member was involved in MOP",                               
+                    "Number of interns/apprentices receiving discipleship/mentoring",                  
+                    "Mentoring and discipling meetings",                                               
+                    "Group Bible study attendances") ~ "Discipleship Encounter",
+    
+    Name...2 %in% c("Number of med students & interns rotating through the hospital per month",
+                    "Number of local leaders/ministries encouraged",
+                    "Days per month team member provided training for national nurses/nursing student",
+                    "Number of med students & medical interns receiving clinical training",
+                    "Colleague Collaboration",
+                    "Partnership meetings",
+                    "Small group teaching",
+                    "Number of missionaries/expats who received mentoring or prayer",                 
+                    "Number of national leaders who received mentoring or prayer",                   
+                    "Number of national leaders' wives who received mentoring or MOP",
+                    "Number of med students and interns rotating through the hospital per month" ,
+                    "Number of people engaged in large group PT/training events.",
+                    "People trained at events",
+                    "Number of people given instruction or training",
+                    "Number of times team members met with local ministry partners/project leaders",
+                    "Training event attendances to develop local ministry leaders",
+                    "People attending medical seminars",
+                    "Encounters encouraging local leaders / ministries") ~ "Train & Support local leaders",
+    
+    Name...2 %in% c("Number of people engaged in small group Book studies by team members",
+                    "Participation in local church activities (not Sunday worship)",
+                    "Number of HCes meeting",
+                    "Sunday church attendances",
+                    "Corporate prayer meetings") ~ "Church Plant Activity",
+    
+    #RESTORE SUB-CATEGORIES 
+    Name...2 %in% c("# of patients seen in outpatient consultation (including by Burundian doctors)",
+                    "Number of patients hospitalized at Kibuye Hope Hospital",
+                    "Patients served by the Kibuye Hope Hospital Needy Patient Fund",
+                    "Total number of patient encounters per month",
+                    "Patients seen in clinic",
+                    "Number of clinic visits in zone 3 for diabetes or general urgent care",
+                    "Number of deliveries at Kapsowar Hospital",                                       
+                    "Number of med/peds inpatients seen at Kapsowar Hospital",  
+                    "Number of patients seen in outpatient consultation by RIIO staff/residents",
+                    "Number of surgeries performed by RIIO staff/residents or Eye Love Africa outreac",
+                    "Number of patients seen in outpatient consultation") ~ "Medical Care",
+    
+    Name...2 %in% c("Number of jobs provided",
+                    "Number of those encountering mercy and justice",
+                    "Activity related to Crucero Bakery Pilot Project",                               
+                    "Encounters encouraging local leaders / ministries",                              
+                    "Event as a result of empowering locals",
+                    "Number of vulnerable people served food or clothing",                            
+                    "Individual mercy/diaconal encounter",                                            
+                    "One-off group activity attendances",                                             
+                    "Recurring group activity attendances") ~ "Mercy, diaconal, justice ministry",
+    
+    Name...2 %in% c("Number of counseling sessions provided", "Number of people given counseling") ~ "Counseling Sessions",
+    
+    #UNSASSIGNED ACTIVITIES
+    
+    TRUE ~ "Unassigned"))
+
+head(categorized_data)
+```
+
+The code chunk below is good for troubleshooting.
+
+```{r part_3}
+
+######################################################################
+#Adding Notes column to explain why some unassigned activities should not be included in the sub_category count
+######################################################################
+
+categorized_data <- categorized_data %>%
+  mutate(Notes = case_when(
+    
+    #Double-Counts
+    Name...2 == "# of surgeries performed at KHH (inc. C-sections & procedures by Burundian Drs)"
+    ~ "already counted with 'Number of patients hospitalized at Kibuye Hope Hospital'",
+    
+    Name...2 %in% c("Number of Internally Displaced Persons provided with medical care", 
+                    "Number of surgeries performed") ~ "already counted with 'Total number of patient encounters per month'",
+    
+    Name...2 %in% c("Functional church members serving in regular role or ministry of church",         
+                    "Sunday church attendance: persons from ministry focus group",                    
+                    "Sunday church attendance: workers sent by overseas orgs and their minor children",
+                    "Functional church members") ~ "already counted with 'Sunday church attendances'",
+    
+    Name...2 == "Recurring group activity attendances: persons from ministry focus group"
+    ~ "already counted with 'Recurring group activity attendances'",
+    
+    
+    #Team, Donor, or HomeOffice Related
+    Name...2 %in% c("Meetings designed for team care",
+                    "Personal retreat days",
+                    "Facilitating short-term partnerships",
+                    "Number of supporting churches/donors engaged with",
+                    "Members attended Sunday service this month",
+                    "Number of adult team members who took a personal retreat day",
+                    "Number of supporters contacted individually",
+                    "Team Meetings",                                                                   
+                    "Number of retreat days per month",                                               
+                    "Cultural learning experiences. Please describe.",                                 
+                    "J Days",                                          
+                    "Recruiting to the SA team or summer internship",   
+                    "Number of fundraising meetings",                                                  
+                    "Number of hours spent in language or cultural learning activities",               
+                    "Number of hours spent in mass communication",
+                    "Number of meetings/gatherings designed for spiritual/emotional team care",
+                    "Number of visitors/volunteers hosted", 
+                    "Number of personal retreats or prayer days",                                     
+                    "Number of visitors hosted",                                                      
+                    "Number of social events (official and unofficial) with team members from other t",
+                    "Personal Days Away and Prayer Times",                                             
+                    "Language learning hours ",
+                    "P times",                                                                        
+                    "Number of hours spent in personal or team retreat days", 
+                    "Number of supporters/supporting churches with whom team members skyped/zoomed",   
+                    "Number of substantial intra team activities",     
+                    "Spiritual or emotional care encounter",
+                    "Number of hours team members contributed to Srg or field training materials pr",
+                    "Professional development encounter") ~ "Team, Donor, or HomeOffice Related Activiy"))
+
+
+######################################################################
+#filters for all categorized_data that has an unassigned sub_category with no notes - these are the activities to take another look at (should they be slotted in a category?)
+######################################################################
+
+unassigned_data <- categorized_data %>%
+  filter(sub_category == "Unassigned" & is.na(Notes))
+
+unique(unassigned_data$Name...2)
+
+```
+
+## Visualizing the Data
+
+Creating the dataset to use in the plots and setting brand colors
+
+```{r part_4}
+#install.packages("plotly")
+#library(plotly)
+
+plot_data <- categorized_data %>%
+  filter(sub_category != "Unassigned") #filtering out any "unassigned" rows
+
+brand <- c("#EF5A4A","#55373C","#0E8BA4","#F5BA40","#AC4432", "#443F32","#388166", "#0B473A")
+
+small_brand <- c("#EF5A4A","#55373C","#0E8BA4")
+```
+
+Total RRR Plot
+
+```{r combined_plot}
+
+rrr_plot <- plot_ly(plot_data, labels = ~Category, values = ~Quantity, type = 'pie', marker = list(colors = brand),
+        showlegend = FALSE, textinfo = 'label+value')
+
+rrr_plot <- rrr_plot %>% layout(
+  paper_bgcolor = "#EFECE0",
+  font = list(
+    family = "Open Sans",        # Set font family (optional)
+    size = 28,              # Set font size for labels
+    color = "white"       # Set font color for labels
+  ))
+
+#to save interactive plot as html
+htmlwidgets::saveWidget(rrr_plot, "~/Documents/Serge/Metrics/Dec_BR/Leadership-Reports/RRR_plot.html")
+```
+
+Total Activity Plot
+
+```{r total_activity_plot}
+
+color_repeated <- rep(brand, length.out = 30)
+
+total_activity_plot <- plot_ly(plot_data, labels = ~Name...2, values = ~Quantity, 
+        type = 'pie', textinfo ='percent', 
+        showlegend = FALSE, marker = list(colors = color_repeated),
+        insidetextorientation = 'radial',  # Make the inside text go radial (good for fitting)
+        textposition = 'inside')  # Place text inside each slice
+
+total_activity_plot
+
+total_activity_plot <- total_activity_plot %>% layout(
+  paper_bgcolor = "#EFECE0")
+
+
+#to save plot
+htmlwidgets::saveWidget(total_activity_plot, "~/Documents/Serge/Metrics/Dec_BR/Leadership-Reports/total_activity_plot.html")
+```
+
+Reach Plot
+
+```{r reach_plot}
+
+#REACH data
+reach_data <- plot_data %>%
+  filter(sub_category %in% c("Pre E Encounter","Gospel Conversation","Formal Gospel Encounter"))
+
+#Plot
+reach_plot <- plot_ly(reach_data, labels = ~sub_category, values = ~Quantity, type = 'pie', textinfo = 'label+percent', 
+        marker = list(colors = brand), showlegend = FALSE)
+
+reach_plot <- reach_plot %>% layout(
+  font = list(
+    family = "Open Sans",        # Set font family (optional)
+    size = 28,              # Set font size for labels
+    color = "white"       # Set font color for labels
+  ))
+
+
+#to save plot
+htmlwidgets::saveWidget(reach_plot, "~/Documents/Serge/Metrics/Dec_BR/Leadership-Reports/reach_plot.html")
+```
+
+Renew Plot
+
+```{r renew_plot}
+
+#RENEW data
+renew_data <- plot_data %>%
+  filter(sub_category %in% c("Discipleship Encounter","Train & Support local leaders","Church Plant Activity"))
+
+#Plot
+renew_plot <- plot_ly(renew_data, labels = ~sub_category, values = ~Quantity, type = 'pie', textinfo = 'label+percent', 
+        marker = list(colors = brand), showlegend = FALSE)
+      
+renew_plot <- renew_plot %>% layout(
+  font = list(
+    family = "Open Sans",        # Set font family 
+    size = 28,              # Set font size for labels
+    color = "white"       # Set font color for labels
+  ))
+
+
+#to save plot
+htmlwidgets::saveWidget(renew_plot, "~/Documents/Serge/Metrics/Dec_BR/Leadership-Reports/renew_plot.html")
+```
+
+Restore Plot
+
+```{r restore_plot}
+
+#RESTORE data
+restore_data <- plot_data %>%
+  filter(sub_category %in% c("Medical Care","Mercy, diaconal, justice ministry","Counseling Sessions"))
+
+#Plot
+restore_plot <- plot_ly(restore_data, labels = ~sub_category, values = ~Quantity, type = 'pie', textinfo = 'label+percent', 
+                     marker = list(colors = c("#55373C","#0E8BA4")), showlegend = FALSE,insidetextorientation = 'horizontal')
+                     
+
+restore_plot <- restore_plot %>% layout(
+  font = list(
+    family = "Open Sans",        # Set font family (optional)
+    size = 28,              # Set font size for labels
+    color = "black"),
+  margin = list(t = 110, b = 15, l = 20, r =10)# Set font color for labels
+)
+
+restore_plot
+
+#to save plot
+htmlwidgets::saveWidget(restore_plot, "~/Documents/Serge/Metrics/Dec_BR/Leadership-Reports/restore_plot.html")
+```
+
+## Specific Outputs
+
+The code chunk below shows the values for each sub_category and is used to accurately fill in the side comments to the leadership report slides
+
+```{r specific outputs}
+
+#REACH comments
+reach_values <- reach_data %>%
+  group_by(sub_category) %>%
+  summarise(sum(Quantity))
+
+#RENEW comments
+renew_values <- renew_data %>%
+  group_by(sub_category) %>%
+  summarise(sum(Quantity))
+
+#RESTORE comments
+restore_values <- restore_data %>%
+  group_by(sub_category) %>%
+  summarise(sum(Quantity))
+  
+
+
+```
+
+## Data and Visualisations including Renewal Team
+
+```{r Renewal}
+
+```
