@@ -9,7 +9,9 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Transforming the Dataset
+# Transforming the Dataset
+
+### Setup
 
 The code chunk below loads the appropriate data downloaded from PowerBI and does some initial setup
 
@@ -35,6 +37,8 @@ field_data <- data %>%
   filter(Name...1 != "Total") %>% #removing total row
   filter(Category != "Team Life") #filtering out TeamLife rows 
 ```
+
+### Sub-Category Assignment
 
 The code chunk below creates a new column that assigns a sub - category to each activity. New and unassigned activities can be added to this chunk.
 
@@ -151,7 +155,8 @@ categorized_data <- field_data %>%
                     "One-off group activity attendances",                                             
                     "Recurring group activity attendances") ~ "Mercy, diaconal, justice ministry",
     
-    Name...2 %in% c("Number of counseling sessions provided", "Number of people given counseling") ~ "Counseling Sessions",
+    Name...2 %in% c("Number of counseling sessions provided", 
+                    "Number of people given counseling") ~ "Counseling Sessions",
     
     #UNSASSIGNED ACTIVITIES
     
@@ -159,6 +164,8 @@ categorized_data <- field_data %>%
 
 head(categorized_data)
 ```
+
+### Troubleshooting
 
 The code chunk below is good for troubleshooting.
 
@@ -230,7 +237,7 @@ unique(unassigned_data$Name...2)
 
 ```
 
-## Visualizing the Data
+# Visualizations
 
 Creating the dataset to use in the plots and setting brand colors
 
@@ -246,7 +253,7 @@ brand <- c("#EF5A4A","#55373C","#0E8BA4","#F5BA40","#AC4432", "#443F32","#388166
 small_brand <- c("#EF5A4A","#55373C","#0E8BA4")
 ```
 
-Total RRR Plot
+### Total RRR Plot
 
 ```{r combined_plot}
 
@@ -261,11 +268,13 @@ rrr_plot <- rrr_plot %>% layout(
     color = "white"       # Set font color for labels
   ))
 
-#to save interactive plot as html
-htmlwidgets::saveWidget(rrr_plot, "~/Documents/Serge/Metrics/Dec_BR/Leadership-Reports/RRR_plot.html")
+rrr_plot 
+
+#to save interactive plot 
+#htmlwidgets::saveWidget(rrr_plot, "~/Documents/Serge/Metrics/Dec_BR/Leadership-Reports/RRR_plot.html")
 ```
 
-Total Activity Plot
+### Total Activity Plot
 
 ```{r total_activity_plot}
 
@@ -277,17 +286,16 @@ total_activity_plot <- plot_ly(plot_data, labels = ~Name...2, values = ~Quantity
         insidetextorientation = 'radial',  # Make the inside text go radial (good for fitting)
         textposition = 'inside')  # Place text inside each slice
 
-total_activity_plot
-
 total_activity_plot <- total_activity_plot %>% layout(
   paper_bgcolor = "#EFECE0")
 
+total_activity_plot
 
-#to save plot
-htmlwidgets::saveWidget(total_activity_plot, "~/Documents/Serge/Metrics/Dec_BR/Leadership-Reports/total_activity_plot.html")
+#to save interactive plot 
+#htmlwidgets::saveWidget(total_activity_plot, "~/Documents/Serge/Metrics/Dec_BR/Leadership-Reports/total_activity_plot.html")
 ```
 
-Reach Plot
+### Reach Plot
 
 ```{r reach_plot}
 
@@ -306,12 +314,13 @@ reach_plot <- reach_plot %>% layout(
     color = "white"       # Set font color for labels
   ))
 
+reach_plot
 
-#to save plot
-htmlwidgets::saveWidget(reach_plot, "~/Documents/Serge/Metrics/Dec_BR/Leadership-Reports/reach_plot.html")
+#to save interactive plot 
+#htmlwidgets::saveWidget(reach_plot, "~/Documents/Serge/Metrics/Dec_BR/Leadership-Reports/reach_plot.html")
 ```
 
-Renew Plot
+### Renew Plot
 
 ```{r renew_plot}
 
@@ -330,12 +339,13 @@ renew_plot <- renew_plot %>% layout(
     color = "white"       # Set font color for labels
   ))
 
+renew_plot
 
-#to save plot
-htmlwidgets::saveWidget(renew_plot, "~/Documents/Serge/Metrics/Dec_BR/Leadership-Reports/renew_plot.html")
+#to save interactive plot 
+#htmlwidgets::saveWidget(renew_plot, "~/Documents/Serge/Metrics/Dec_BR/Leadership-Reports/renew_plot.html")
 ```
 
-Restore Plot
+### Restore Plot
 
 ```{r restore_plot}
 
@@ -358,11 +368,11 @@ restore_plot <- restore_plot %>% layout(
 
 restore_plot
 
-#to save plot
-htmlwidgets::saveWidget(restore_plot, "~/Documents/Serge/Metrics/Dec_BR/Leadership-Reports/restore_plot.html")
+#to save interactive plot 
+#htmlwidgets::saveWidget(restore_plot, "~/Documents/Serge/Metrics/Dec_BR/Leadership-Reports/restore_plot.html")
 ```
 
-## Specific Outputs
+# Specific Outputs
 
 The code chunk below shows the values for each sub_category and is used to accurately fill in the side comments to the leadership report slides
 
@@ -382,12 +392,9 @@ renew_values <- renew_data %>%
 restore_values <- restore_data %>%
   group_by(sub_category) %>%
   summarise(sum(Quantity))
-  
-
-
 ```
 
-## Data and Visualisations including Renewal Team
+# Data and Visualizations including Renewal Team
 
 ```{r Renewal}
 
