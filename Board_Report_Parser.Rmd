@@ -32,7 +32,6 @@ data <- read_excel("data.xlsx")
 
 #Cleaning data
 field_data <- data %>%
-  filter(Name...1 != "Renewal") %>% #filtering out Renewal Team
   mutate(Category = ifelse(Category == "Renewal", "Renew", Category)) %>% #Modifying "Renewal" category name
   filter(Name...1 != "Total") %>% #removing total row
   filter(Category != "Team Life") #filtering out TeamLife rows 
@@ -40,7 +39,7 @@ field_data <- data %>%
 
 ### Sub-Category Assignment
 
-The code chunk below creates a new column that assigns a sub - category to each activity. New and unassigned activities can be added to this chunk.
+The code chunk below creates a new column that assigns a sub - category to each activity. New and unassigned activities can be added to this chunk as they come.
 
 ```{r part_2}
 
@@ -52,14 +51,16 @@ categorized_data <- field_data %>%
   mutate(sub_category = case_when(
     
     #REACH SUB-CATEGORIES
+    ##Pre-E Encounter
     Name...2 %in% c("Intentional relational encounter with unbeliever", 
                     "People participating in outreach events", 
                     "Pre-E Encounters", 
                     "Number of hours engaged in relationship-building ministry", 
+                    "New NA contacts added to the team's relational network through a face-to-face en",
                     "Intentional relational encounter with unbeliever from ministry focus group",
                     "Intentional relational encounter with unbeliever not from ministry focus group",
                     "Number of those who received practical assistance") ~ "Pre E Encounter",
-    
+    ##Gospel Conversation
     Name...2 %in% c("Number of patient CDs as reported by hospital chaplains",
                     "G-spl conversations",
                     "Spiritual Conversations with Non-Believers",
@@ -67,13 +68,14 @@ categorized_data <- field_data %>%
                     "Number of significant new EV encounters with NBs",
                     "Conversations that led to speaking about the gspl",
                     "E Encounters",
+                    "Significant EV conversations",
                     "Number of EV encounters",
                     "Number of ABs",
                     "Number of pre-CD conversations by team with non believers",
                     "Number of times a team member talked about God with non-believer(s)",
                     "Verbal gospel encounter with unbeliever from ministry focus group",
                     "Verbal gospel encounter with unbeliever not from ministry focus group") ~ "Gospel Conversation",
-    
+    ##Formal Gospel Encounter
     Name...2 %in% c("Number of times a team member preached or taught",
                     "Event attendance where team member taught of preached",
                     "Number of times a team member preached or provided spiritual teaching",
@@ -84,9 +86,12 @@ categorized_data <- field_data %>%
                     "Number of times team member preached/taught in small group",
                     "Number of people attending HC, C or BS - NB or B",
                     "Number of other classes taught",
+                    "Large group teaching",
                     "Sunday church attendances: total unbelievers") ~ "Formal Gospel Encounter",
     
+    
     #RENEW SUB-CATEGORIES
+    ##Discipleship Encounter
     Name...2 %in% c("People receiving mentoring/discipling",
                     "Number of people our team is discipling",
                     "Number of people engaged in small group Book studies by team members",
@@ -100,15 +105,18 @@ categorized_data <- field_data %>%
                     "One to one (outward)",
                     "Relational prayer times",                                                         
                     "Small group teaching",
-                    "D encounters",                                                                    
+                    "D encounters", 
+                    "Number of Mentoring/Discipling meetings with NA people",
                     "Number of people team members discipled or mentored",
                     "Number of times a team member was involved in MOP",                               
                     "Number of interns/apprentices receiving discipleship/mentoring",                  
                     "Mentoring and discipling meetings",                                               
                     "Group Bible study attendances") ~ "Discipleship Encounter",
-    
+    ##Train & Support local leaders
     Name...2 %in% c("Number of med students & interns rotating through the hospital per month",
                     "Number of local leaders/ministries encouraged",
+                    "Number of NA people attending IRG",
+                    "Number of NA people attending Oasis Group",
                     "Days per month team member provided training for national nurses/nursing student",
                     "Number of med students & medical interns receiving clinical training",
                     "Colleague Collaboration",
@@ -125,14 +133,16 @@ categorized_data <- field_data %>%
                     "Training event attendances to develop local ministry leaders",
                     "People attending medical seminars",
                     "Encounters encouraging local leaders / ministries") ~ "Train & Support local leaders",
-    
+    ##Church Plant Activity
     Name...2 %in% c("Number of people engaged in small group Book studies by team members",
                     "Participation in local church activities (not Sunday worship)",
                     "Number of HCes meeting",
                     "Sunday church attendances",
                     "Corporate prayer meetings") ~ "Church Plant Activity",
     
+    
     #RESTORE SUB-CATEGORIES 
+    ##Medical Care
     Name...2 %in% c("# of patients seen in outpatient consultation (including by Burundian doctors)",
                     "Number of patients hospitalized at Kibuye Hope Hospital",
                     "Patients served by the Kibuye Hope Hospital Needy Patient Fund",
@@ -144,7 +154,7 @@ categorized_data <- field_data %>%
                     "Number of patients seen in outpatient consultation by RIIO staff/residents",
                     "Number of surgeries performed by RIIO staff/residents or Eye Love Africa outreac",
                     "Number of patients seen in outpatient consultation") ~ "Medical Care",
-    
+    ##Mercy, diaconal, justice ministry
     Name...2 %in% c("Number of jobs provided",
                     "Number of those encountering mercy and justice",
                     "Activity related to Crucero Bakery Pilot Project",                               
@@ -154,9 +164,13 @@ categorized_data <- field_data %>%
                     "Individual mercy/diaconal encounter",                                            
                     "One-off group activity attendances",                                             
                     "Recurring group activity attendances") ~ "Mercy, diaconal, justice ministry",
-    
+    ##Counseling Sessions
     Name...2 %in% c("Number of counseling sessions provided", 
                     "Number of people given counseling") ~ "Counseling Sessions",
+    
+    
+    ##Renewal Team
+    Name...1 == "Renewal" ~ "Renewal Team",
     
     #UNSASSIGNED ACTIVITIES
     
@@ -237,27 +251,27 @@ unique(unassigned_data$Name...2)
 
 ```
 
-# Visualizations
+# Overseas Visualizations
 
 Creating the dataset to use in the plots and setting brand colors
 
 ```{r part_4}
 #install.packages("plotly")
-#library(plotly)
+library(plotly)
 
-plot_data <- categorized_data %>%
-  filter(sub_category != "Unassigned") #filtering out any "unassigned" rows
+overseas_data <- categorized_data %>%
+  filter(!sub_category %in% c("Unassigned", "Renewal Team")) #filtering out any "unassigned" rows
 
 brand <- c("#EF5A4A","#55373C","#0E8BA4","#F5BA40","#AC4432", "#443F32","#388166", "#0B473A")
 
-small_brand <- c("#EF5A4A","#55373C","#0E8BA4")
+rrr_brand <- c("Restore" = "#EF5A4A", "Reach" = "#388166","Renew" = "#0E8BA4")
 ```
 
 ### Total RRR Plot
 
 ```{r combined_plot}
 
-rrr_plot <- plot_ly(plot_data, labels = ~Category, values = ~Quantity, type = 'pie', marker = list(colors = brand),
+rrr_plot <- plot_ly(overseas_data, labels = ~Category, values = ~Quantity, type = 'pie', marker = list(colors = brand),
         showlegend = FALSE, textinfo = 'label+value')
 
 rrr_plot <- rrr_plot %>% layout(
@@ -280,7 +294,7 @@ rrr_plot
 
 color_repeated <- rep(brand, length.out = 30)
 
-total_activity_plot <- plot_ly(plot_data, labels = ~Name...2, values = ~Quantity, 
+total_activity_plot <- plot_ly(overseas_data, labels = ~Name...2, values = ~Quantity, 
         type = 'pie', textinfo ='percent', 
         showlegend = FALSE, marker = list(colors = color_repeated),
         insidetextorientation = 'radial',  # Make the inside text go radial (good for fitting)
@@ -300,12 +314,13 @@ total_activity_plot
 ```{r reach_plot}
 
 #REACH data
-reach_data <- plot_data %>%
+reach_data <- overseas_data %>%
   filter(sub_category %in% c("Pre E Encounter","Gospel Conversation","Formal Gospel Encounter"))
 
 #Plot
-reach_plot <- plot_ly(reach_data, labels = ~sub_category, values = ~Quantity, type = 'pie', textinfo = 'label+percent', 
-        marker = list(colors = brand), showlegend = FALSE)
+reach_plot <- plot_ly(reach_data, labels = ~sub_category, values = ~Quantity, type = 'pie', 
+                      textinfo = 'label+percent', marker = list(colors = brand), showlegend = FALSE,
+                      insidetextorientation = 'horizontal', textposition = 'inside')
 
 reach_plot <- reach_plot %>% layout(
   font = list(
@@ -325,12 +340,13 @@ reach_plot
 ```{r renew_plot}
 
 #RENEW data
-renew_data <- plot_data %>%
+renew_data <- overseas_data %>%
   filter(sub_category %in% c("Discipleship Encounter","Train & Support local leaders","Church Plant Activity"))
 
 #Plot
-renew_plot <- plot_ly(renew_data, labels = ~sub_category, values = ~Quantity, type = 'pie', textinfo = 'label+percent', 
-        marker = list(colors = brand), showlegend = FALSE)
+renew_plot <- plot_ly(renew_data, labels = ~sub_category, values = ~Quantity, type = 'pie', 
+                      textinfo = 'label+percent', marker = list(colors = brand), showlegend = FALSE,
+                      insidetextorientation = 'horizontal', textposition = 'inside')
       
 renew_plot <- renew_plot %>% layout(
   font = list(
@@ -350,12 +366,12 @@ renew_plot
 ```{r restore_plot}
 
 #RESTORE data
-restore_data <- plot_data %>%
+restore_data <- overseas_data %>%
   filter(sub_category %in% c("Medical Care","Mercy, diaconal, justice ministry","Counseling Sessions"))
 
 #Plot
 restore_plot <- plot_ly(restore_data, labels = ~sub_category, values = ~Quantity, type = 'pie', textinfo = 'label+percent', 
-                     marker = list(colors = c("#55373C","#0E8BA4")), showlegend = FALSE,insidetextorientation = 'horizontal')
+                     marker = list(colors = c("#388166","#0E8BA4")), showlegend = FALSE,insidetextorientation = 'horizontal')
                      
 
 restore_plot <- restore_plot %>% layout(
@@ -394,8 +410,23 @@ restore_values <- restore_data %>%
   summarise(sum(Quantity))
 ```
 
-# Data and Visualizations including Renewal Team
+# Renewal Team Visualizations
 
 ```{r Renewal}
 
+total_data <- categorized_data %>%
+  filter(sub_category != "Unassigned") #filtering out any "unassigned" rows
+
+total_rrr_plot <- plot_ly(total_data, labels = ~Category, values = ~Quantity, type = 'pie', 
+                          marker = list(colors = brand), showlegend = FALSE, textinfo = 'label+value',
+                          insidetextorientation = 'horizontal', textposition = 'inside')
+
+total_rrr_plot <- total_rrr_plot %>% layout(
+  paper_bgcolor = "#EFECE0",
+  font = list(
+    family = "Open Sans",        # Set font family (optional)
+    size = 20            # Set font size for labels
+  ))
+
+total_rrr_plot 
 ```
