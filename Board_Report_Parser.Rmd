@@ -430,3 +430,23 @@ total_rrr_plot <- total_rrr_plot %>% layout(
 
 total_rrr_plot 
 ```
+
+```{r Renewal only}
+
+renewal_data <- total_data %>%
+  filter(sub_category == "Renewal Team")
+
+
+renewal_plot <- plot_ly(renewal_data, labels = ~Category, values = ~Quantity, type = 'pie', 
+                          marker = list(colors = "#388166"), showlegend = FALSE, textinfo = 'label+value',
+                          insidetextorientation = 'horizontal', textposition = 'inside')
+
+renewal_plot <- renewal_plot %>% layout(
+  paper_bgcolor = "#EFECE0",
+  font = list(
+    family = "Open Sans",        # Set font family (optional)
+    size = 20            # Set font size for labels
+  ))
+
+renewal_plot
+```
